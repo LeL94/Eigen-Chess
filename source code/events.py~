@@ -1,0 +1,287 @@
+
+import pygame, sys
+from classes import *
+from math import *
+
+def events():
+	keys = pygame.key.get_pressed()
+	
+	# exit
+	if keys[pygame.K_ESCAPE]:
+		pygame.quit()
+		sys.exit()		
+
+	for event in pygame.event.get(pygame.KEYUP):
+		# new game
+		if event.key == pygame.K_SPACE:
+			new_game()
+			
+		# print pieces number list
+		if event.key == pygame.K_p:
+			for piece in Piece.DICT.values():
+				print(piece)
+
+	for event in pygame.event.get():
+		# exit
+		if event.type == pygame.QUIT:
+			pygame.quit()
+			sys.exit()
+		# mouse
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			movement()
+
+
+
+def movement():
+	Mpos = pygame.mouse.get_pos() # [x,y]
+	Mx = Mpos[0]/Tile.WIDTH
+	My = Mpos[1]/Tile.HEIGHT
+	for tile in Tile.LIST:
+		if tile.x == (Mx*Tile.WIDTH) and tile.y == (My*Tile.HEIGHT):
+			for piece in Piece.DICT.values():
+				# if there is a piece selected, move that piece
+				if piece.selected:
+					piece.selected = False
+
+					if not move_piece(piece,tile): # returns True if movement allowed, False otherwise
+						break
+
+					del Piece.DICT[piece.get_number()]
+
+					piece.x = tile.x
+					piece.y = tile.y
+					piece.initial_pos = False
+
+					# if there is already a piece, destroy it
+					if tile.number in Piece.DICT.keys():
+						del Piece.DICT[tile.number]
+
+					Piece.DICT[tile.number] = piece
+					break
+				# if there is not a piece selected, select a piece if there is one
+				else:
+					if piece.get_number() == tile.number:
+						piece.selected = True
+
+
+
+def move_piece(p,t):
+	pn = p.get_number() 	# piece number
+	tn = t.number 		# tile number
+	distance = sqrt( (t.x-p.x)**2 + (t.y-p.y)**2 )
+	keys = Piece.DICT.keys()
+	if tn in keys:
+		ptc = Piece.DICT[tn] 	# piece to capture
+		if p.color == ptc.color:
+			return False
+
+	# pawn
+	if p.type == "pawn" and p.color == "white":
+		if p.initial_pos and (tn == pn-8 or tn == pn-16) and (not tn in keys):
+			# bug: pawn can skip another piece
+			return True
+		elif (tn == pn-8) and (not tn in keys):
+			return True
+		elif (tn == pn-8+1) and (not pn in Tile.EDGE_DX):
+			return True
+		elif (tn == pn-8-1) and (not pn in Tile.EDGE_SX):
+			return True
+		else:
+			return False
+	if p.type == "pawn" and p.color == "black":
+		if p.initial_pos and (tn == pn+8 or tn == pn+16) and (not tn in keys):
+			# bug: pawn can skip another piece
+			return True
+		elif (tn == pn+8) and (not tn in keys):
+			return True
+		elif (tn == pn+8+1) and (not pn in Tile.EDGE_DX):
+			return True
+		elif (tn == pn+8-1) and (not pn in Tile.EDGE_SX):
+			return True
+		else:
+			return False
+
+	# king
+	if p.type == "king":
+		# north/south
+		if (tn == pn-8) or (tn == pn+8):
+			return True
+		# east
+		elif tn in (pn-8+1,pn+1,pn+8+1) and (not pn in Tile.EDGE_DX):
+			return True
+		# west
+		elif tn in (pn-8-1,pn-1,pn+8-1) and (not pn in Tile.EDGE_SX):
+			return True
+		else:
+		    return False
+
+	# knight
+	if p.type == "knight":
+		if sqrt((p.x-t.x)**2+(p.y-t.y)**2) > 170:
+			return False
+		if tn in (pn-16-1,pn-16+1,pn+16-1,pn+16+1, pn-8-2,pn-8+2,pn+8-2,pn+8+2):
+			return True
+
+	# rook
+	if p.type == "rook":
+		# vertical movement
+		if abs(pn-tn) % 8 == 0:
+			# tiles on way
+			if tn < pn:
+				tow = range(pn-8,tn,-8) 
+			elif tn > pn:
+				tow = range(pn+8,tn,8)
+			else: tow = []
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		# horizontal movement
+		elif t.y == p.y:
+			# tiles on way
+			if tn < pn:
+				tow = range(pn-1,tn,-1)
+			elif tn > pn:
+				tow = range(pn+1,tn,1)
+			else:
+				tow = []
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		else:
+			return False
+
+	# bishop
+	if p.type == "bishop":
+		
+		# anti-diagonal movement
+		if abs(tn-pn) % 7 == 0:
+			if tn < pn:
+				tow = range(pn-7,tn,-7)
+			elif tn > pn:
+				tow = range(pn+7,tn,7)
+			else:
+				tow = []
+			allowed_distance = (len(tow)+1) * sqrt(2) * Tile.WIDTH
+			if distance != allowed_distance:
+				return False
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		# diagonal movement
+		elif abs(tn-pn) % 9 == 0:
+			if tn < pn:
+				tow = range(pn-9,tn,-9)
+			elif tn > pn:
+				tow = range(pn+9,tn,9)
+			else:
+				tow = []
+			allowed_distance = (len(tow)+1) * sqrt(2) * Tile.WIDTH
+			if distance != allowed_distance:
+				return False
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		else:
+			return False
+
+	# queen
+	if p.type == "queen":
+		# vertical movement
+		if abs(pn-tn) % 8 == 0:
+			# tiles on way
+			if tn < pn:
+				tow = range(pn-8,tn,-8) 
+			elif tn > pn:
+				tow = range(pn+8,tn,8)
+			else: tow = []
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		# horizontal movement
+		elif t.y == p.y:
+			# tiles on way
+			if tn < pn:
+				tow = range(pn-1,tn,-1)
+			elif tn > pn:
+				tow = range(pn+1,tn,1)
+			else:
+				tow = []
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		# anti-diagonal movement
+		elif abs(tn-pn) % 7 == 0:
+			if tn < pn:
+				tow = range(pn-7,tn,-7)
+			elif tn > pn:
+				tow = range(pn+7,tn,7)
+			else:
+				tow = []
+			allowed_distance = (len(tow)+1) * sqrt(2) * Tile.WIDTH
+			if distance != allowed_distance:
+				return False
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		# diagonal movement
+		elif abs(tn-pn) % 9 == 0:
+			if tn < pn:
+				tow = range(pn-9,tn,-9)
+			elif tn > pn:
+				tow = range(pn+9,tn,9)
+			else:
+				tow = []
+			allowed_distance = (len(tow)+1) * sqrt(2) * Tile.WIDTH
+			if distance != allowed_distance:
+				return False
+			# if there is a piece on the way, return false
+			for tile in tow:
+				if tile in keys:
+					return False
+			return True
+		else:
+			return False
+
+
+
+def new_game():
+	Piece.DICT.clear()
+	# White
+	Piece(0*Tile.WIDTH,7*Tile.HEIGHT,"images/vesco.png","rook","white")
+	Piece(1*Tile.WIDTH,7*Tile.HEIGHT,"images/masa.png","knight","white")
+	Piece(2*Tile.WIDTH,7*Tile.HEIGHT,"images/gigi.gif","bishop","white")
+	Piece(3*Tile.WIDTH,7*Tile.HEIGHT,"images/camilla.png","queen","white")
+	Piece(4*Tile.WIDTH,7*Tile.HEIGHT,"images/dozio.gif","king","white")
+	Piece(5*Tile.WIDTH,7*Tile.HEIGHT,"images/gigi.gif","bishop","white")
+	Piece(6*Tile.WIDTH,7*Tile.HEIGHT,"images/masa.png","knight","white")
+	Piece(7*Tile.WIDTH,7*Tile.HEIGHT,"images/vesco.png","rook","white")
+	for i in range(0,8):
+		Piece(i*Tile.WIDTH,6*Tile.HEIGHT,"images/fabione.gif","pawn","white")
+	
+	# Black
+	Piece(0*Tile.WIDTH,0*Tile.HEIGHT,"images/vesco.png","rook","black")
+	Piece(1*Tile.WIDTH,0*Tile.HEIGHT,"images/masa.png","knight","black")
+	Piece(2*Tile.WIDTH,0*Tile.HEIGHT,"images/gigi.gif","bishop","black")
+	Piece(3*Tile.WIDTH,0*Tile.HEIGHT,"images/camilla.png","queen","black")
+	Piece(4*Tile.WIDTH,0*Tile.HEIGHT,"images/dozio.gif","king","black")
+	Piece(5*Tile.WIDTH,0*Tile.HEIGHT,"images/gigi.gif","bishop","black")
+	Piece(6*Tile.WIDTH,0*Tile.HEIGHT,"images/masa.png","knight","black")
+	Piece(7*Tile.WIDTH,0*Tile.HEIGHT,"images/vesco.png","rook","black")
+	for i in range(0,8):
+		Piece(i*Tile.WIDTH,1*Tile.HEIGHT,"images/fabione.gif","pawn","black")
+
+	
