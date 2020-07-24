@@ -1,7 +1,7 @@
 
 import pygame
 from math import *
-import functions
+import utils
 
 pygame.mixer.init()
 laugh_sound = pygame.mixer.Sound("sounds/laugh.wav")
@@ -38,6 +38,7 @@ class Piece(pygame.Rect):
 	aux_piece = False
 	DICT = {}
 	WHITE_TURN = True
+
 	def __init__(self,x,y,image,piece_type,color,real_piece=True):
 		pygame.Rect.__init__(self,x,y,Tile.WIDTH,Tile.HEIGHT)
 		self.image = pygame.image.load(image)
@@ -52,35 +53,43 @@ class Piece(pygame.Rect):
 				self.initial_pos = False
 			elif self.color == "black" and self.get_number() not in (9,10,11,12,13,14,15,16):
 				self.initial_pos = False
+
 	def gct(self):
-		return []		
+		return []
+
 	def draw_image(self,screen):
 		if self.color == "white":
 			screen.blit(Images.white_image,(self.x,self.y))
 		else:
 			screen.blit(Images.black_image,(self.x,self.y))
 		screen.blit(self.image,(self.x,self.y))
+
 	def get_number(self):
-		return (self.x/Tile.WIDTH)+1 + (self.y/Tile.HEIGHT)*8
+		return int((self.x/Tile.WIDTH)+1 + (self.y/Tile.HEIGHT)*8)
+
 	def __str__(self):
 		res = "Piece: " + self.type +"\nColor: " + self.color + "\nNumber: " + str(self.get_number())
 		res += "\nx: " + str(self.x) + "\ny: " + str(self.y)
 		return res
+
 	@staticmethod
 	def get_piece(number):
 		for piece in Piece.DICT.values():
 			if piece.get_number() == number:
 				return piece
+
 	@staticmethod
 	def gwk(all_pieces): # get white king
 		for piece in all_pieces.values():
 			if piece.type == "king" and piece.color == "white":
 				return piece
+
 	@staticmethod
 	def gbk(all_pieces): # get black king
 		for piece in all_pieces.values():
 			if piece.type == "king" and piece.color == "black":
 				return piece
+
 	@staticmethod
 	def gwct(all_pieces): # get white controlled tiles
 		wct = []
@@ -88,6 +97,7 @@ class Piece(pygame.Rect):
 			if piece.color == "white":
 				wct += piece.gct(all_pieces)
 		return wct
+
 	@staticmethod
 	def gbct(all_pieces): # get black controlled tiles
 		bct = []
@@ -95,6 +105,7 @@ class Piece(pygame.Rect):
 			if piece.color == "black":
 				bct += piece.gct(all_pieces)
 		return bct
+
 	@staticmethod
 	def cicam(moving_piece,future_tile): # check if check after move
 		# create auxiliary dictionary
@@ -272,9 +283,9 @@ class Pawn(Piece):
 		del Piece.DICT[self.get_number()]
 		Queen(self.x,self.y,Images.queen_image,"queen",self.color)
 		if self.color == "white":
-			functions.black_checkmate()
+			utils.black_checkmate()
 		elif self.color == "black":
-			functions.white_checkmate()
+			utils.white_checkmate()
 		"""
 		promotion_loop = True
 		while promotion_loop:
@@ -466,6 +477,7 @@ class Pawn(Piece):
 class Knight(Piece):
 	def __init__(self,x,y,image,piece_type,color,real_piece=True):
 		Piece.__init__(self,x,y,image,piece_type,color,real_piece)
+
 	def move(self,t,all_pieces,real_move=True):
 		p = self
 		pn = self.get_number() 	# piece number
@@ -569,7 +581,7 @@ class Rook(Piece):
 			if tile in all_pieces.keys() and not (all_pieces[tile].type == "king" and all_pieces[tile].color != self.color):
 				ct4 = range(pn+1,tile+1,1)
 				break
-		controlled_tiles = ct1 + ct2 + ct3 + ct4
+		controlled_tiles = list(ct1) + list(ct2) + list(ct3) + list(ct4)
 		ct = []
 		for i in controlled_tiles:
 			ct.append(i)
@@ -657,7 +669,7 @@ class Bishop(Piece):
 			if tile in all_pieces.keys() and not (all_pieces[tile].type == "king" and all_pieces[tile].color != self.color):
 				ct4 = range(pn+9,tile+9,9)
 				break
-		controlled_tiles = ct1 + ct2 + ct3 + ct4
+		controlled_tiles = list(ct1) + list(ct2) + list(ct3) + list(ct4)
 		ct = []
 		for i in controlled_tiles:
 			ct.append(i)
@@ -792,8 +804,7 @@ class Queen(Piece):
 			if tile in all_pieces.keys() and not (all_pieces[tile].type == "king" and all_pieces[tile].color != self.color):
 				ct8 = range(pn+9,tile+9,9)
 				break
-
-		controlled_tiles1 = ct1 + ct2 + ct3 + ct4
+		controlled_tiles1 = list(ct1) + list(ct2) + list(ct3) + list(ct4)
 		ct = []
 		for i in controlled_tiles1:
 			ct.append(i)
@@ -802,7 +813,7 @@ class Queen(Piece):
 			if tile.y != self.y and (abs(i-pn)) % 8 != 0:
 				controlled_tiles1.remove(i)
 
-		controlled_tiles2 = ct5 + ct6 + ct7 + ct8
+		controlled_tiles2 = list(ct5) + list(ct6) + list(ct7) + list(ct8)
 		ct = []
 		for i in controlled_tiles2:
 			ct.append(i)
