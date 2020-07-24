@@ -62,7 +62,7 @@ def play_game(screen):
         pygame.display.flip()
 
 
-def button(screen, msg, x, y, w, h, ic, ac, action=None):
+def create_button(screen, msg, x, y, w, h, ic, ac, action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     global legend_loop
@@ -73,14 +73,14 @@ def button(screen, msg, x, y, w, h, ic, ac, action=None):
             Sounds.click_sound.play()
             pygame.time.wait(250)
             play_game(screen)
-        elif click[0] == 1 and action == "legend":
+        elif click[0] == 1 and action == "open_keys_page":
             Sounds.click_sound.play()
             pygame.time.wait(250)
-            legend(screen)
-        elif click[0] == 1 and action == "credits":
+            open_keys_page(screen)
+        elif click[0] == 1 and action == "open_info_page":
             Sounds.click_sound.play()
             pygame.time.wait(250)
-            credits(screen)
+            open_info_page(screen)
         elif click[0] == 1 and action == "quit":
             Sounds.click_sound.play()
             pygame.time.wait(250)
@@ -99,7 +99,7 @@ def button(screen, msg, x, y, w, h, ic, ac, action=None):
     screen.blit(textSurf, textRect)
 
 
-def credits(screen):
+def open_info_page(screen):
     credits_loop = True
     while credits_loop:
         for event in pygame.event.get():
@@ -122,7 +122,7 @@ def credits(screen):
         pygame.display.flip()
 
 
-def legend(screen):
+def open_keys_page(screen):
     legendImage = pygame.image.load("images/legend.png")
     global legend_loop
     legend_loop = True
@@ -143,7 +143,7 @@ def legend(screen):
                     legend_loop = False
 
         screen.blit(legendImage, (0, 0))
-        utils.button(screen, "Back", 600 / 2 - 50, 80, 100, 50, (153, 76, 0), (204, 102, 0), "back")
+        utils.create_button(screen, "Back", 600 / 2 - 50, 80, 100, 50, (153, 76, 0), (204, 102, 0), "back")
 
         pygame.display.flip()
 
