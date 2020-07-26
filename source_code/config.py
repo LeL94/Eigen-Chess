@@ -4,10 +4,23 @@ import pygame
 APP_NAME = "EigenChess"
 VERSION = "2.0.0"
 
+# SIZES
 DISPLAY_WIDTH = 600
 DISPLAY_HEIGHT = 600
 TILE_SIZE = 75
+BUTTON_WIDTH = 180
+BUTTON_HEIGHT = 50
 
-MENU_IMAGE = pygame.image.load("images/menu_t.jpg")
+# COLORS
 BUTTON_COLOR = (153, 76, 0)
 BUTTON_COLOR_BRIGHT = (204, 102, 0)
+ALLOWED_TILE_COLOR = (52, 155, 66)
+CHECK_COLOR = (255,0,0)
+
+MENU_IMAGE = pygame.image.load("images/menu_t.jpg")
+
+GUI_DELAY = 100
+
+PROMOTION_TILES = (1, 2, 3, 4, 5, 6, 7, 8, 57, 58, 59, 60, 61, 62, 63, 64)
+
+
